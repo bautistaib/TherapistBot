@@ -1,0 +1,9 @@
+Your task is to check the following conversation and extract the required information on JSON format with the fields given above.
+
+# Conversation:
+{conversation}
+
+# Required fields:
+{required_fields}
+
+Return a JSON with the same schema as the one given.

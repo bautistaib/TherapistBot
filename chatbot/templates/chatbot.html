@@ -1,0 +1,288 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <style>
+    /* Reset CSS */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Global Styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    .header-left {
+      margin-right: auto;
+    }
+
+    .header-text {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #4e4e4e;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-button {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-left: auto;
+    }
+
+    .header-button:hover {
+      background-color: #0056b3;
+    }
+
+    .chat-container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .chat-box {
+      height: 300px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column; /* Align elements vertically */
+      margin-top: 20px;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      width: calc(100% - 100px); /* Adjust the width here */
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Chat message styling */
+    .message {
+      background-color: #e6e6e6;
+      color: #333;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 12px;
+      max-width: 70%;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    /* Reset chat button styling */
+    .reset-button-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    #reset-chat-button {
+      padding: 8px 16px;
+      background-color: #ff6347;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #reset-chat-button:hover {
+      background-color: #ff473f;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .chat-container {
+        max-width: 90%;
+      }
+    }
+    /* Success message styling */
+.success-message {
+  background-color: #d4edda; /* Green background color */
+  color: #155724; /* Dark green text color */
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* New chat button styling */
+.new-chat-button {
+  text-align: center;
+}
+
+#new-chat-button {
+  padding: 10px 20px;
+  background-color: #28a745; /* Green button color */
+  color: #fff; /* White text color */
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#new-chat-button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+
+/* Time slot styling */
+.calendar {
+        float: right;
+        margin-left: 20px;
+    }
+    .time-slots {
+        display: flex;
+        flex-direction: column;
+    }
+    .time-slot {
+        padding: 5px;
+        margin-bottom: 5px;
+        border: 1px solid #ccc;
+    }
+    .available {
+        background-color: #8BC34A; /* Green for available slots */
+    }
+    .booked {
+        background-color: #EF5350; /* Red for booked slots */
+    }
+</style>
+
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="header-text">Hello, {{username}}</span>
+    </div>
+    <form action="{% url 'logout' %}" method="post">
+      {% csrf_token %}
+      <button class="header-button" type="submit">Logout</button>
+  </form>
+  </div>
+  
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <!-- Chat messages -->
+        <!-- Loop through the chat messages -->
+        {% for message in chat.conversation %}
+            {% if message.role == "assistant" %}
+              {% if message.visible %}
+                <div class="message bot">{{ message.content }}</div>
+              {% endif %}
+            {% else %}
+                <div class="message user">{{ message.content }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Show input box and buttons if the chat is open -->
+    {% if chat.is_open %}
+        <form id="message-form" method="post">
+            {% csrf_token %}
+            <div class="input-container">
+                <div class="input-and-button">
+                    <input type="text" id="user-input" name="user_input" placeholder="Type your message...">
+                    <button type="submit" name="send_message">Send</button>
+                </div>
+                <!-- "Reset chat" button added here -->
+                <div class="reset-button-container">
+                    <button id="reset-chat-button" type="submit" name="reset_chat">Reset Chat</button>
+                </div>
+            </div>
+        </form>
+    {% else %}
+        <!-- Show success message and new chat button -->
+        <div class="success-message">
+            {% if close_message %}
+              <p> {{close_message}}</p>
+            {% else %}
+              <p>This chat is archived, please start a new one!</p>
+            {% endif %}
+        </div>
+        <form action="{% url 'chatbot' %}" method="post">
+          {% csrf_token %}
+          <div class="new-chat-button">
+              <button id="new-chat-button" type="submit" name="new_chat">Start New Chat</button>
+          </div>
+        </form>
+
+    {% endif %}
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Scroll to the bottom of the chatbox
+    var chatbox = document.getElementById("chat-box");
+    chatbox.scrollTop = chatbox.scrollHeight;
+  });
+</script>
+
+<script>
+  window.onload = function() {
+    var userInput = document.getElementById('user-input');
+    if (userInput) {
+        userInput.focus();
+    }
+};
+
+</script>
+
+</body>
+</html>

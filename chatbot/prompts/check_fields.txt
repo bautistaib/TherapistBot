@@ -1,0 +1,10 @@
+Your job is to decide if ALL the user's required information is present on the given conversation. You must only respond with [Yes/No].
+Conversation:
+
+{conversation}
+
+Required information:
+{required_fields}
+
+
+Answer only with [Yes/No].
