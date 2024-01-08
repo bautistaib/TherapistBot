@@ -1,0 +1,7 @@
+{'Alias': a name or nickname the patient wishes to be addressed by. It may or may not be their real name <string>,
+'Age': the patient's age. <int>,
+'Gender': the patient's gender ("undisclosed" if the patient prefers so) <string>,
+'First_time': indicating whether the patient has previously visited Dr. Doe or not. <Bool>,
+'Email': the contact.  <string>,
+'Phone_number': the contact phone number. <string>,
+'Previous_diagnosis': any prior diagnosis the patient would like the doctor to be aware of. <string>}
