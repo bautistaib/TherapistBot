@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import auth
 from django.contrib.auth.models import User
 from .models import Patient, Session, Chat
+from .prompts import new_user_prompt, new_session_prompt, profile_json_prompt, check_fields, required_fields
 from django.conf import settings
 import os
 import json
@@ -9,29 +10,10 @@ from datetime import datetime, timedelta
 
 
 from openai import OpenAI
-api_key = "YOUR API KEY HERE"
+api_key = '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'
 client = OpenAI(api_key = api_key)
 model = 'gpt-3.5-turbo'
 
-prompt_dir = os.path.join(settings.BASE_DIR, 'chatbot', 'prompts')
-# Import the system prompts
-with open(os.path.join(prompt_dir, 'new_user_prompt.txt'), 'r') as file:
-    # new_user_prompt has a {username} and a {required_fields} placeholder.
-    new_user_prompt = file.read()
-with open(os.path.join(prompt_dir, 'required_fields.txt'), 'r') as file:
-    # the data required for the patient.
-    required_fields = file.read()
-with open(os.path.join(prompt_dir, 'check_fields.txt'), 'r') as file:
-    # A system prompt for the checker LLM to check if all the required fields are present on the converstion.
-    # It has a {conversation} and {required_fields} placeholder.
-    check_fields = file.read()
-with open(os.path.join(prompt_dir, 'profile_json.txt'), 'r') as file:
-    # A system prompt for the checker to output a JSON with the patient data.
-    # It has a {conversation} placeholder.
-    profile_json_prompt = file.read()
-with open(os.path.join(prompt_dir, 'new_session.txt'), 'r') as file:
-    # A system prompt for users with a patient profile to schedule a new session. It has a {patient_information} and {current datetime} placeholder.
-    new_session_prompt = file.read()
 
 def trim_message(message):
     # Remove the visible and timestamp keys from the message inside the conversation on models.Chat.
@@ -75,6 +57,8 @@ def respond(conversation, client, system_prompt, model=model, tools=None, max_to
         )
     print('message:', response.choices[0].message.content, '\nfinish reason:', response.choices[0].finish_reason, '\ntool_calls:', response.choices[0].message.tool_calls)
     return response.choices[0].message.content, response.choices[0].finish_reason, response.choices[0].message.tool_calls
+
+# <|FINISHED|>
 
 def extract_patient_information(patient):
     """
@@ -370,7 +354,14 @@ def chatbot(request):
                         chat.save()
                         print("chat closed")
                         return render(request, 'chatbot.html', {'username': request.user, 'chat': chat, 'close_message': 'Patient registered successfully! If you want to schedule a session, click on the "New chat" button.'})
-
+                    else:
+                        print("not all required fields are present")
+                        message = "Error: There are missing fields in the patient profile. Please continue the conversation until you have them."
+                        chat.add_message("assistant", message, visible=False)
+                        response, _, _ = respond(chat.conversation, client,
+                                    new_user_prompt.format(username=request.user.username, required_fields=required_fields))
+                        chat.add_message("assistant", response)
+                        return render(request, 'chatbot.html', {'username': request.user, 'chat': chat})
                 else:
                     print("not finished")
                     chat.add_message("assistant", response)
