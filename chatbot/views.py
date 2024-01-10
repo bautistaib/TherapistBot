@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 
 
 from openai import OpenAI
-api_key = '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'
-client = OpenAI(api_key = api_key)
+client = OpenAI()
 model = 'gpt-3.5-turbo'
 
 
@@ -358,9 +357,6 @@ def chatbot(request):
                         print("not all required fields are present")
                         message = "Error: There are missing fields in the patient profile. Please continue the conversation until you have them."
                         chat.add_message("assistant", message, visible=False)
-                        response, _, _ = respond(chat.conversation, client,
-                                    new_user_prompt.format(username=request.user.username, required_fields=required_fields))
-                        chat.add_message("assistant", response)
                         return render(request, 'chatbot.html', {'username': request.user, 'chat': chat})
                 else:
                     print("not finished")
